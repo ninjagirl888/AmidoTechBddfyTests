@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using System.IO;
 using System;
 
@@ -10,27 +11,36 @@ namespace AmidoTechBddfyTests.Configuration
     {
         public void UpdateConfigFile()
         {
-            // Retrieve the value of BaseUrl from the Windows environment variables
-            string baseUrl = Environment.GetEnvironmentVariable("BaseUrl");
-
-            // Load the existing config.json file
-            IConfigurationRoot configuration = new ConfigurationBuilder()
+            // Load the existing config file
+            var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("config.json")
+                .AddJsonFile("appsettings.json")
                 .Build();
 
-            // Update the BaseUrl value in the configuration
-            configuration["BaseUrl"] = baseUrl;
+            // Update the "BaseUrl" setting with the value from my system
+            string baseUrl = Environment.GetEnvironmentVariable("BaseUrl");
+            string userId = Environment.GetEnvironmentVariable("ExisitngUserId");
 
-            // Build a new configuration and write it to the config.json file
-            var newConfiguration = new ConfigurationBuilder()
-                .AddConfiguration(configuration)
-                .Build();
+            configBuilder["BaseUrl"] = baseUrl;
+            configBuilder["ExistingUserId"] = userId;
 
-            using (StreamWriter writer = new StreamWriter("config.json"))
+            // Create a new JsonConfigurationProvider with the updated configuration
+            var jsonProvider = new JsonConfigurationProvider(new JsonConfigurationSource
             {
-              //  newConfiguration.Save(writer);
-            }
+                Path = "appsettings.json",
+                Optional = true,
+                ReloadOnChange = true
+            });
+            jsonProvider.Set("BaseUrl", baseUrl);
+            jsonProvider.Set("ExistingUserId", baseUrl);
+
+            // Save the updated configuration to the file
+            //jsonProvider.Save(); - Save doesn't work.. 
+
+            // Optional: Force reload the configuration to reflect the changes
+           // configBuilder.Reload();
+
+
         }
     }
 
